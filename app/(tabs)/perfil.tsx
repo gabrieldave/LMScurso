@@ -1,0 +1,202 @@
+import { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+  ActivityIndicator,
+} from 'react-native';
+import { router } from 'expo-router';
+import { supabase } from '../../lib/supabase';
+import { signOut } from '../../lib/auth';
+import { enableBiometric, isBiometricEnabled } from '../../lib/auth';
+import { esAdmin } from '../../lib/services/adminService';
+
+export default function PerfilScreen() {
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [esAdminUsuario, setEsAdminUsuario] = useState(false);
+  const [biometricEnabled, setBiometricEnabled] = useState(false);
+
+  useEffect(() => {
+    cargarPerfil();
+  }, []);
+
+  const cargarPerfil = async () => {
+    try {
+      const {
+        data: { user: currentUser },
+      } = await supabase.auth.getUser();
+
+      if (!currentUser) {
+        router.replace('/(auth)/login');
+        return;
+      }
+
+      setUser(currentUser);
+
+      // Verificar si es admin
+      const admin = await esAdmin(currentUser.id);
+      setEsAdminUsuario(admin);
+
+      // Verificar biométrica
+      const biometric = await isBiometricEnabled();
+      setBiometricEnabled(biometric);
+    } catch (error) {
+      console.error('Error cargando perfil:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCerrarSesion = async () => {
+    Alert.alert(
+      'Cerrar sesión',
+      '¿Estás seguro de que deseas cerrar sesión?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Cerrar sesión',
+          style: 'destructive',
+          onPress: async () => {
+            await signOut();
+            router.replace('/(auth)/login');
+          },
+        },
+      ]
+    );
+  };
+
+  const handleHabilitarBiometric = async () => {
+    const result = await enableBiometric();
+    if (result) {
+      setBiometricEnabled(true);
+      Alert.alert('Éxito', 'Autenticación biométrica habilitada');
+    } else {
+      Alert.alert('Error', 'No se pudo habilitar la autenticación biométrica');
+    }
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.centerContainer}>
+        <ActivityIndicator size="large" color="#4285F4" />
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <View style={styles.avatarContainer}>
+          <Text style={styles.avatarText}>
+            {user?.email?.charAt(0).toUpperCase() || 'U'}
+          </Text>
+        </View>
+        <Text style={styles.nombre}>{user?.email || 'Usuario'}</Text>
+        {esAdminUsuario && (
+          <View style={styles.adminBadge}>
+            <Text style={styles.adminBadgeText}>Administrador</Text>
+          </View>
+        )}
+      </View>
+
+      <View style={styles.options}>
+        <TouchableOpacity
+          style={styles.optionItem}
+          onPress={handleHabilitarBiometric}
+          disabled={biometricEnabled}
+        >
+          <Text style={styles.optionText}>
+            {biometricEnabled
+              ? '✓ Autenticación biométrica habilitada'
+              : 'Habilitar autenticación biométrica'}
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.optionItem, styles.logoutItem]}
+          onPress={handleCerrarSesion}
+        >
+          <Text style={[styles.optionText, styles.logoutText]}>
+            Cerrar sesión
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#1a1a1a',
+  },
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#1a1a1a',
+  },
+  header: {
+    alignItems: 'center',
+    padding: 32,
+    borderBottomWidth: 1,
+    borderBottomColor: '#333',
+  },
+  avatarContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#4285F4',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  avatarText: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  nombre: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#fff',
+    marginBottom: 8,
+  },
+  adminBadge: {
+    backgroundColor: '#4285F4',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginTop: 8,
+  },
+  adminBadgeText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  options: {
+    padding: 16,
+  },
+  optionItem: {
+    backgroundColor: '#2a2a2a',
+    padding: 16,
+    borderRadius: 8,
+    marginBottom: 12,
+  },
+  optionText: {
+    color: '#fff',
+    fontSize: 16,
+  },
+  logoutItem: {
+    backgroundColor: '#d32f2f',
+    marginTop: 8,
+  },
+  logoutText: {
+    color: '#fff',
+    fontWeight: '600',
+  },
+});
+
