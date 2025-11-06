@@ -8,16 +8,12 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { router } from 'expo-router';
-import { supabase } from '../../lib/supabase';
-import { signOut } from '../../lib/auth';
-import { enableBiometric, isBiometricEnabled } from '../../lib/auth';
-import { esAdmin } from '../../lib/services/adminService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getCurrentSession, logout } from '../../lib/services/authCustomService';
 
 export default function PerfilScreen() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [esAdminUsuario, setEsAdminUsuario] = useState(false);
-  const [biometricEnabled, setBiometricEnabled] = useState(false);
 
   useEffect(() => {
     cargarPerfil();
@@ -25,9 +21,7 @@ export default function PerfilScreen() {
 
   const cargarPerfil = async () => {
     try {
-      const {
-        data: { user: currentUser },
-      } = await supabase.auth.getUser();
+      const currentUser = await getCurrentSession();
 
       if (!currentUser) {
         router.replace('/(auth)/login');
@@ -35,14 +29,6 @@ export default function PerfilScreen() {
       }
 
       setUser(currentUser);
-
-      // Verificar si es admin
-      const admin = await esAdmin(currentUser.id);
-      setEsAdminUsuario(admin);
-
-      // Verificar biométrica
-      const biometric = await isBiometricEnabled();
-      setBiometricEnabled(biometric);
     } catch (error) {
       console.error('Error cargando perfil:', error);
     } finally {
@@ -60,7 +46,8 @@ export default function PerfilScreen() {
           text: 'Cerrar sesión',
           style: 'destructive',
           onPress: async () => {
-            await signOut();
+            await logout();
+            await AsyncStorage.removeItem('user_email');
             router.replace('/(auth)/login');
           },
         },
@@ -68,15 +55,6 @@ export default function PerfilScreen() {
     );
   };
 
-  const handleHabilitarBiometric = async () => {
-    const result = await enableBiometric();
-    if (result) {
-      setBiometricEnabled(true);
-      Alert.alert('Éxito', 'Autenticación biométrica habilitada');
-    } else {
-      Alert.alert('Error', 'No se pudo habilitar la autenticación biométrica');
-    }
-  };
 
   if (loading) {
     return (
@@ -94,27 +72,10 @@ export default function PerfilScreen() {
             {user?.email?.charAt(0).toUpperCase() || 'U'}
           </Text>
         </View>
-        <Text style={styles.nombre}>{user?.email || 'Usuario'}</Text>
-        {esAdminUsuario && (
-          <View style={styles.adminBadge}>
-            <Text style={styles.adminBadgeText}>Administrador</Text>
-          </View>
-        )}
+        <Text style={styles.nombre}>{user?.name || user?.email || 'Usuario'}</Text>
       </View>
 
       <View style={styles.options}>
-        <TouchableOpacity
-          style={styles.optionItem}
-          onPress={handleHabilitarBiometric}
-          disabled={biometricEnabled}
-        >
-          <Text style={styles.optionText}>
-            {biometricEnabled
-              ? '✓ Autenticación biométrica habilitada'
-              : 'Habilitar autenticación biométrica'}
-          </Text>
-        </TouchableOpacity>
-
         <TouchableOpacity
           style={[styles.optionItem, styles.logoutItem]}
           onPress={handleCerrarSesion}

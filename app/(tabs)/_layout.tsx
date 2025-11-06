@@ -31,20 +31,11 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="busqueda"
+        name="soporte"
         options={{
-          title: 'Búsqueda',
+          title: 'Soporte',
           tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="search" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="admin"
-        options={{
-          title: 'Admin',
-          tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="admin-panel-settings" size={size} color={color} />
+            <MaterialIcons name="support-agent" size={size} color={color} />
           ),
         }}
       />
@@ -55,6 +46,20 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, size }) => (
             <MaterialIcons name="person" size={size} color={color} />
           ),
+        }}
+      />
+      <Tabs.Screen
+        name="admin"
+        options={{
+          href: null, // Oculta el tab
+          title: 'Admin',
+        }}
+      />
+      <Tabs.Screen
+        name="busqueda"
+        options={{
+          href: null, // Oculta el tab
+          title: 'Búsqueda',
         }}
       />
     </Tabs>

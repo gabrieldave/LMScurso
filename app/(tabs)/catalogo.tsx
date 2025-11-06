@@ -7,7 +7,7 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
-import { supabase } from '../../lib/supabase';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getCursosConProgreso } from '../../lib/services/cursoService';
 import { CursoConProgreso } from '../../types/database';
 import CursoCard from '../../components/CursoCard';
@@ -23,13 +23,14 @@ export default function CatalogoScreen() {
 
   const cargarCursos = async () => {
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const userEmail = await AsyncStorage.getItem('user_email');
 
-      if (!user) return;
+      if (!userEmail) {
+        console.error('No hay email de usuario');
+        return;
+      }
 
-      const cursosData = await getCursosConProgreso(user.id);
+      const cursosData = await getCursosConProgreso(userEmail);
       setCursos(cursosData);
     } catch (error) {
       console.error('Error cargando cursos:', error);
