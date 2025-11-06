@@ -310,8 +310,9 @@ export default function LeccionScreen() {
   const tieneSiguiente = indiceActual < lecciones.length - 1;
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.content}>
+    <View style={styles.container}>
+      <ScrollView style={styles.scrollView}>
+        <View style={styles.content}>
         {/* Título de la lección */}
         <Text style={styles.titulo}>{leccion.titulo_leccion}</Text>
 
@@ -460,8 +461,17 @@ export default function LeccionScreen() {
         >
           <Text style={styles.volverButtonText}>← Volver al Curso</Text>
         </TouchableOpacity>
+
+        {/* Botón regresar a cursos - al final */}
+        <TouchableOpacity
+          style={styles.regresarButton}
+          onPress={() => router.push('/(tabs)/catalogo')}
+        >
+          <Text style={styles.regresarButtonText}>← Regresar a Inicio</Text>
+        </TouchableOpacity>
       </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 
@@ -469,6 +479,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+  },
+  scrollView: {
+    flex: 1,
   },
   centerContainer: {
     flex: 1,
@@ -478,6 +491,20 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
+  },
+  regresarButton: {
+    backgroundColor: '#f5f5f5',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  regresarButtonText: {
+    color: '#4285F4',
+    fontSize: 16,
+    fontWeight: '600',
   },
   volverButton: {
     backgroundColor: '#4285F4',

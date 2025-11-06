@@ -133,7 +133,8 @@ export default function CursoDetailScreen() {
   const progreso = totalLecciones > 0 ? Math.round((leccionesCompletadas / totalLecciones) * 100) : 0;
 
   return (
-    <ScrollView style={styles.container}>
+    <View style={styles.container}>
+      <ScrollView style={styles.scrollView}>
       {/* Portada */}
       {curso.url_portada && (
         <Image
@@ -144,6 +145,14 @@ export default function CursoDetailScreen() {
       )}
 
       <View style={styles.content}>
+        {/* Botón regresar a cursos */}
+        <TouchableOpacity
+          style={styles.regresarButton}
+          onPress={() => router.push('/(tabs)/catalogo')}
+        >
+          <Text style={styles.regresarButtonText}>← Regresar a Inicio</Text>
+        </TouchableOpacity>
+        
         {/* Título */}
         <Text style={styles.titulo}>{curso.titulo}</Text>
         
@@ -238,7 +247,8 @@ export default function CursoDetailScreen() {
           </>
         )}
       </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 
@@ -246,6 +256,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+  },
+  scrollView: {
+    flex: 1,
   },
   centerContainer: {
     flex: 1,
@@ -259,6 +272,21 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
+    paddingBottom: 80, // Espacio para el tab bar
+  },
+  regresarButton: {
+    backgroundColor: '#f5f5f5',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  regresarButtonText: {
+    color: '#4285F4',
+    fontSize: 16,
+    fontWeight: '600',
   },
   titulo: {
     fontSize: 24,

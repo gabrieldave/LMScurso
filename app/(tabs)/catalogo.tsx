@@ -11,6 +11,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getCursosConProgreso } from '../../lib/services/cursoService';
 import { CursoConProgreso } from '../../types/database';
 import CursoCard from '../../components/CursoCard';
+import CustomTabBar from '../../components/CustomTabBar';
 
 export default function CatalogoScreen() {
   const [cursos, setCursos] = useState<CursoConProgreso[]>([]);
@@ -71,6 +72,7 @@ export default function CatalogoScreen() {
           </View>
         }
       />
+      <CustomTabBar />
     </View>
   );
 }

@@ -10,6 +10,7 @@ import {
 import { router } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getCurrentSession, logout } from '../../lib/services/authCustomService';
+import CustomTabBar from '../../components/CustomTabBar';
 
 export default function PerfilScreen() {
   const [user, setUser] = useState<any>(null);
@@ -85,6 +86,7 @@ export default function PerfilScreen() {
           </Text>
         </TouchableOpacity>
       </View>
+      <CustomTabBar />
     </View>
   );
 }

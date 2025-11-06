@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import CustomTabBar from '../../components/CustomTabBar';
 
 export default function SoporteScreen() {
   const handleOpenLink = (url: string) => {
@@ -114,6 +115,7 @@ export default function SoporteScreen() {
           <MaterialIcons name="open-in-new" size={20} color="#999" />
         </TouchableOpacity>
       </View>
+      <CustomTabBar />
     </ScrollView>
   );
 }
@@ -122,6 +124,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+    paddingBottom: 60, // Espacio para el tab bar
   },
   section: {
     padding: 16,

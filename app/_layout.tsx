@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getCurrentSession } from '../lib/services/authCustomService';
+import { TabBarProvider } from '../lib/contexts/TabBarContext';
 
 export default function RootLayout() {
   const [session, setSession] = useState<any | null>(null);
@@ -33,20 +34,22 @@ export default function RootLayout() {
   }
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      {!session ? (
-        <>
-          <Stack.Screen name="(auth)" />
-          <Stack.Screen name="index" redirect />
-        </>
-      ) : (
-        <>
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="curso/[id]" />
-          <Stack.Screen name="leccion/[id]" />
-        </>
-      )}
-    </Stack>
+    <TabBarProvider>
+      <Stack screenOptions={{ headerShown: false }}>
+        {!session ? (
+          <>
+            <Stack.Screen name="(auth)" />
+            <Stack.Screen name="index" redirect />
+          </>
+        ) : (
+          <>
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="curso/[id]" />
+            <Stack.Screen name="leccion/[id]" />
+          </>
+        )}
+      </Stack>
+    </TabBarProvider>
   );
 }
 
