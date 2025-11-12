@@ -15,7 +15,7 @@ import { marcarLeccionCompletada, desmarcarLeccionCompletada, getLeccionesPorCur
 import { getMaterialesPorLeccion } from '../../lib/services/materialService';
 import { Leccion } from '../../types/database';
 import YoutubePlayer from 'react-native-youtube-iframe';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { universalStorage } from '../../lib/storage/webStorage';
 
 export default function LeccionScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -45,7 +45,7 @@ export default function LeccionScreen() {
   const cargarDatos = async () => {
     try {
       setLoading(true);
-      const userEmail = await AsyncStorage.getItem('user_email');
+      const userEmail = await universalStorage.getItem('user_email');
 
       if (!userEmail) {
         Alert.alert('Error', 'No hay sesión activa');
@@ -128,7 +128,7 @@ export default function LeccionScreen() {
 
   const handleMarcarCompletada = async () => {
     try {
-      const userEmail = await AsyncStorage.getItem('user_email');
+      const userEmail = await universalStorage.getItem('user_email');
       if (!userEmail || !leccion) return;
 
       await marcarLeccionCompletada(userEmail, leccion.curso_id, leccion.id);
@@ -142,7 +142,7 @@ export default function LeccionScreen() {
 
   const handleDesmarcarCompletada = async () => {
     try {
-      const userEmail = await AsyncStorage.getItem('user_email');
+      const userEmail = await universalStorage.getItem('user_email');
       if (!userEmail || !leccion) return;
 
       await desmarcarLeccionCompletada(userEmail, leccion.curso_id, leccion.id);

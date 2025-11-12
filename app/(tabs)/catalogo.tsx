@@ -7,7 +7,7 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { universalStorage } from '../../lib/storage/webStorage';
 import { getCursosConProgreso } from '../../lib/services/cursoService';
 import { CursoConProgreso } from '../../types/database';
 import CursoCard from '../../components/CursoCard';
@@ -24,7 +24,7 @@ export default function CatalogoScreen() {
 
   const cargarCursos = async () => {
     try {
-      const userEmail = await AsyncStorage.getItem('user_email');
+      const userEmail = await universalStorage.getItem('user_email');
 
       if (!userEmail) {
         console.error('No hay email de usuario');
