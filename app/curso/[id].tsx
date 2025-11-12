@@ -19,7 +19,7 @@ import {
 } from '../../lib/services/cursoService';
 import { Curso, Leccion } from '../../types/database';
 import ProgresoBarra from '../../components/ProgresoBarra';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { universalStorage } from '../../lib/storage/webStorage';
 
 export default function CursoDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -38,7 +38,7 @@ export default function CursoDetailScreen() {
   const cargarDatos = async () => {
     try {
       setLoading(true);
-      const userEmail = await AsyncStorage.getItem('user_email');
+      const userEmail = await universalStorage.getItem('user_email');
 
       if (!userEmail) {
         Alert.alert('Error', 'No hay sesión activa');
@@ -76,7 +76,7 @@ export default function CursoDetailScreen() {
   const handleSolicitarAcceso = async () => {
     try {
       setSolicitandoAcceso(true);
-      const userEmail = await AsyncStorage.getItem('user_email');
+      const userEmail = await universalStorage.getItem('user_email');
       
       if (!userEmail) {
         Alert.alert('Error', 'No hay sesión activa');

@@ -8,18 +8,22 @@ import {
   ActivityIndicator,
   TextInput,
   Image,
+  ScrollView,
 } from 'react-native';
 import { signInWithGoogle } from '../../lib/auth';
-import { loginWithEmailPassword } from '../../lib/services/authCustomService';
+import { loginWithEmailPassword, registerUser } from '../../lib/services/authCustomService';
 import { router } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { universalStorage } from '../../lib/storage/webStorage';
 
 const GOOGLE_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID || '';
 
 export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
+  const [isRegisterMode, setIsRegisterMode] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [name, setName] = useState('');
 
 
   const handleEmailLogin = async () => {
@@ -35,12 +39,57 @@ export default function LoginScreen() {
       if (!result.success) {
         Alert.alert('Error', result.error || 'Error al iniciar sesión');
       } else if (result.user) {
-        // Guardar email en AsyncStorage para uso en servicios
-        await AsyncStorage.setItem('user_email', result.user.email);
+        // Guardar email en almacenamiento universal para uso en servicios
+        await universalStorage.setItem('user_email', result.user.email);
         router.replace('/(tabs)/catalogo');
       }
     } catch (error: any) {
       Alert.alert('Error', error.message || 'Error al iniciar sesión');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRegister = async () => {
+    if (!email || !password || !name) {
+      Alert.alert('Error', 'Por favor completa todos los campos');
+      return;
+    }
+
+    if (password.length < 6) {
+      Alert.alert('Error', 'La contraseña debe tener al menos 6 caracteres');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      Alert.alert('Error', 'Las contraseñas no coinciden');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const result = await registerUser(email.trim(), password, name.trim());
+
+      if (!result.success) {
+        Alert.alert('Error', result.error || 'Error al registrarse');
+      } else if (result.user) {
+        // Guardar email en almacenamiento universal
+        await universalStorage.setItem('user_email', result.user.email);
+        Alert.alert(
+          'Registro exitoso',
+          'Tu cuenta ha sido creada correctamente.',
+          [
+            {
+              text: 'Continuar',
+              onPress: () => {
+                router.replace('/(tabs)/catalogo');
+              },
+            },
+          ]
+        );
+      }
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Error al registrarse');
     } finally {
       setLoading(false);
     }
@@ -61,7 +110,11 @@ export default function LoginScreen() {
 
 
   return (
-    <View style={styles.container}>
+    <ScrollView 
+      style={styles.container} 
+      contentContainerStyle={styles.contentContainer}
+      keyboardShouldPersistTaps="handled"
+    >
       {/* Logo */}
       <View style={styles.logoContainer}>
         <Image
@@ -74,9 +127,44 @@ export default function LoginScreen() {
       </View>
 
       <Text style={styles.title}>TODOS SOMOS TRADERS LMS</Text>
-      <Text style={styles.subtitle}>Inicia sesión para continuar</Text>
+      <Text style={styles.subtitle}>
+        {isRegisterMode ? 'Crea tu cuenta para comenzar' : 'Inicia sesión para continuar'}
+      </Text>
+
+      {/* Toggle entre Login y Registro */}
+      <View style={styles.toggleContainer}>
+        <TouchableOpacity
+          style={[styles.toggleButton, !isRegisterMode && styles.toggleButtonActive]}
+          onPress={() => setIsRegisterMode(false)}
+          disabled={loading}
+        >
+          <Text style={[styles.toggleText, !isRegisterMode && styles.toggleTextActive]}>
+            Iniciar Sesión
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.toggleButton, isRegisterMode && styles.toggleButtonActive]}
+          onPress={() => setIsRegisterMode(true)}
+          disabled={loading}
+        >
+          <Text style={[styles.toggleText, isRegisterMode && styles.toggleTextActive]}>
+            Registrarse
+          </Text>
+        </TouchableOpacity>
+      </View>
 
       <View style={styles.formContainer}>
+        {isRegisterMode && (
+          <TextInput
+            style={styles.input}
+            placeholder="Nombre completo"
+            placeholderTextColor="#999"
+            value={name}
+            onChangeText={setName}
+            autoCapitalize="words"
+            editable={!loading}
+          />
+        )}
         <TextInput
           style={styles.input}
           placeholder="Email"
@@ -86,6 +174,7 @@ export default function LoginScreen() {
           keyboardType="email-address"
           autoCapitalize="none"
           autoComplete="email"
+          editable={!loading}
         />
         <TextInput
           style={styles.input}
@@ -95,26 +184,33 @@ export default function LoginScreen() {
           onChangeText={setPassword}
           secureTextEntry
           autoCapitalize="none"
+          editable={!loading}
         />
+        {isRegisterMode && (
+          <TextInput
+            style={styles.input}
+            placeholder="Confirmar contraseña"
+            placeholderTextColor="#999"
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+            secureTextEntry
+            autoCapitalize="none"
+            editable={!loading}
+          />
+        )}
 
         <TouchableOpacity
           style={[styles.button, styles.emailButton]}
-          onPress={handleEmailLogin}
+          onPress={isRegisterMode ? handleRegister : handleEmailLogin}
           disabled={loading}
         >
           {loading ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.buttonText}>Iniciar sesión</Text>
+            <Text style={styles.buttonText}>
+              {isRegisterMode ? 'Crear cuenta' : 'Iniciar sesión'}
+            </Text>
           )}
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.button, styles.signUpButton]}
-          onPress={() => router.push('/(auth)/registro')}
-          disabled={loading}
-        >
-          <Text style={styles.signUpButtonText}>Crear cuenta nueva</Text>
         </TouchableOpacity>
       </View>
 
@@ -125,21 +221,26 @@ export default function LoginScreen() {
             onPress={handleGoogleLogin}
             disabled={loading}
           >
-            <Text style={styles.buttonText}>Iniciar sesión con Google</Text>
+            <Text style={styles.buttonText}>
+              {isRegisterMode ? 'Registrarse con Google' : 'Iniciar sesión con Google'}
+            </Text>
           </TouchableOpacity>
         </View>
       )}
 
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#fff',
+  },
+  contentContainer: {
+    flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
     padding: 20,
   },
   logoContainer: {
@@ -218,6 +319,32 @@ const styles = StyleSheet.create({
     color: '#1a237e',
     fontSize: 16,
     fontWeight: '600',
+  },
+  toggleContainer: {
+    flexDirection: 'row',
+    width: '100%',
+    maxWidth: 400,
+    marginBottom: 20,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 8,
+    padding: 4,
+  },
+  toggleButton: {
+    flex: 1,
+    padding: 12,
+    borderRadius: 6,
+    alignItems: 'center',
+  },
+  toggleButtonActive: {
+    backgroundColor: '#1a237e',
+  },
+  toggleText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#666',
+  },
+  toggleTextActive: {
+    color: '#fff',
   },
 });
 

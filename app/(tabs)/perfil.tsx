@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { router } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { universalStorage } from '../../lib/storage/webStorage';
 import { getCurrentSession, logout } from '../../lib/services/authCustomService';
 import CustomTabBar from '../../components/CustomTabBar';
 
@@ -48,7 +48,7 @@ export default function PerfilScreen() {
           style: 'destructive',
           onPress: async () => {
             await logout();
-            await AsyncStorage.removeItem('user_email');
+            await universalStorage.removeItem('user_email');
             router.replace('/(auth)/login');
           },
         },

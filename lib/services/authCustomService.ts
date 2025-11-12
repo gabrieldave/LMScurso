@@ -1,6 +1,6 @@
 import { supabase } from '../supabase';
-import * as Crypto from 'expo-crypto';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { digestStringSHA256, getRandomBytes } from '../crypto/webCrypto';
+import { universalStorage } from '../storage/webStorage';
 
 /**
  * Servicio de autenticación custom usando authenticated_users_lms_movil
@@ -37,10 +37,7 @@ export async function loginWithEmailPassword(
     // Si password_hash es NULL, permitir login sin contraseña (para usuarios existentes)
     if (usuario.password_hash) {
       // Hash de la contraseña ingresada
-      const passwordHash = await Crypto.digestStringAsync(
-        Crypto.CryptoDigestAlgorithm.SHA256,
-        password
-      );
+      const passwordHash = await digestStringSHA256(password);
 
       // Comparar hashes (en producción, usar bcrypt o similar)
       if (usuario.password_hash !== passwordHash) {
@@ -48,7 +45,7 @@ export async function loginWithEmailPassword(
       }
     }
 
-    // Guardar sesión en AsyncStorage
+    // Guardar sesión en almacenamiento universal
     const sessionData = {
       user: {
         id: usuario.id,
@@ -58,8 +55,8 @@ export async function loginWithEmailPassword(
       timestamp: Date.now(),
     };
 
-    await AsyncStorage.setItem('custom_session', JSON.stringify(sessionData));
-    await AsyncStorage.setItem('user_email', usuario.email);
+    await universalStorage.setItem('custom_session', JSON.stringify(sessionData));
+    await universalStorage.setItem('user_email', usuario.email);
 
     return {
       success: true,
@@ -97,13 +94,10 @@ export async function registerUser(
     }
 
     // Hash de la contraseña
-    const passwordHash = await Crypto.digestStringAsync(
-      Crypto.CryptoDigestAlgorithm.SHA256,
-      password
-    );
+    const passwordHash = await digestStringSHA256(password);
 
-    // Generar UUID usando expo-crypto
-    const uuidBytes = await Crypto.getRandomBytesAsync(16);
+    // Generar UUID usando crypto universal
+    const uuidBytes = await getRandomBytes(16);
     const uuid = Array.from(uuidBytes)
       .map(b => b.toString(16).padStart(2, '0'))
       .join('');
@@ -138,8 +132,8 @@ export async function registerUser(
       timestamp: Date.now(),
     };
 
-    await AsyncStorage.setItem('custom_session', JSON.stringify(sessionData));
-    await AsyncStorage.setItem('user_email', data.email);
+    await universalStorage.setItem('custom_session', JSON.stringify(sessionData));
+    await universalStorage.setItem('user_email', data.email);
 
     return {
       success: true,
@@ -161,7 +155,7 @@ export async function registerUser(
  */
 export async function getCurrentSession(): Promise<UsuarioAutenticado | null> {
   try {
-    const sessionStr = await AsyncStorage.getItem('custom_session');
+    const sessionStr = await universalStorage.getItem('custom_session');
 
     if (!sessionStr) return null;
 
@@ -188,8 +182,8 @@ export async function getCurrentSession(): Promise<UsuarioAutenticado | null> {
  */
 export async function logout(): Promise<void> {
   try {
-    await AsyncStorage.removeItem('custom_session');
-    await AsyncStorage.removeItem('user_email');
+    await universalStorage.removeItem('custom_session');
+    await universalStorage.removeItem('user_email');
   } catch (error) {
     console.error('Error cerrando sesión:', error);
   }

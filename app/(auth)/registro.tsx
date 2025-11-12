@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { registerUser } from '../../lib/services/authCustomService';
 import { router } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { universalStorage } from '../../lib/storage/webStorage';
 
 export default function RegistroScreen() {
   const [loading, setLoading] = useState(false);
@@ -44,8 +44,8 @@ export default function RegistroScreen() {
       if (!result.success) {
         Alert.alert('Error', result.error || 'Error al registrarse');
       } else if (result.user) {
-        // Guardar email en AsyncStorage
-        await AsyncStorage.setItem('user_email', result.user.email);
+        // Guardar email en almacenamiento universal
+        await universalStorage.setItem('user_email', result.user.email);
         Alert.alert(
           'Registro exitoso',
           'Tu cuenta ha sido creada correctamente.',
